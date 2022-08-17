@@ -64,6 +64,7 @@ export default (bill) => {
           </div>
         </div>
       </div>
+      ${ bill.fileName !== 'null' ? (`
       <div class="row">
         <div class="col-sm">
           <label for="file" class="bold-label">Justificatif</label>
@@ -75,6 +76,7 @@ export default (bill) => {
           </div>
         </div>
       </div>
+      `) : ''}
       <div class="row">
        ${bill.status === 'pending' ? (`
         <div class="col-sm">
