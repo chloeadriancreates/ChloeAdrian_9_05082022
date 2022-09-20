@@ -20,18 +20,21 @@ export default class NewBill {
     const file = this.document.querySelector(`input[data-testid="file"]`).files[0]
     const filePath = e.target.value.split(/\\/g)
     const fileName = filePath[filePath.length-1]
-    console.log(file);
-    console.log(filePath);
-    console.log(fileName);
     const formData = new FormData()
     const email = JSON.parse(localStorage.getItem("user")).email
     formData.append('file', file)
     formData.append('email', email)
 
     let extension = fileName.substr(fileName.lastIndexOf(".") + 1, fileName.length).toLowerCase();
-    console.log(extension);
     const validExtensions = ["png", "jpg", "jpeg"];
+    const errorMessage = document.getElementById('errorMessage');
+    const btnSendBill = document.getElementById('btn-send-bill');
+    const input = document.querySelector('form div.col-md-6:last-child div:last-child input');
+
     if(validExtensions.includes(extension)) {
+      errorMessage.setAttribute('class', 'errorMessage--hidden');
+      btnSendBill.disabled = false;
+      input.setAttribute('class', 'form-control blue-border');
       this.store
       .bills()
       .create({
@@ -41,13 +44,14 @@ export default class NewBill {
         }
       })
       .then(({fileUrl, key}) => {
-        console.log(fileUrl)
         this.billId = key
         this.fileUrl = fileUrl
         this.fileName = fileName
       }).catch(error => console.error(error))
     } else {
-      // MESSAGE D'ERREUR + disable button
+      errorMessage.setAttribute('class', 'errorMessage--shown');
+      btnSendBill.disabled = true;
+      input.setAttribute('class', 'form-control red-border');
     }
   }
   handleSubmit = e => {
