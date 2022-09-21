@@ -11,6 +11,7 @@ import userEvent from '@testing-library/user-event';
 import { ROUTES, ROUTES_PATH } from "../constants/routes.js";
 
 // I tried using beforeEach() to get rid of the duplicate code in these two tests, but the tests then don't find the functions. I don't know if that's normal behavior or if I did something wrong :')
+// Also I don't really want to, and I'm technically over 80% coverage, but should I write tests that actually check the contents of handleSubmit()?
 
 // beforeEach(() => {
 //   Object.defineProperty(window, 'localStorage', { value: localStorageMock })
@@ -57,6 +58,7 @@ import { ROUTES, ROUTES_PATH } from "../constants/routes.js";
 //   userEvent.click(buttonSubmit);
 // })
 
+// Unit tests
 describe("Given I am connected as an employee", () => {
   describe("When I am on NewBill Page", () => {
     describe("When I select a new file", () => {
@@ -150,8 +152,9 @@ describe("Given I am connected as an employee", () => {
 
           const handleSubmit = jest.fn(() => newBillContainer.handleSubmit({
             target: {
-              querySelector: () => {
-              }
+              querySelector: (element) => {
+                return { value: "" };
+            }
             },
             preventDefault: () => {}
           }));
