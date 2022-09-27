@@ -2,61 +2,57 @@
  * @jest-environment jsdom
  */
 
-import { screen, fireEvent } from "@testing-library/dom"
+import { screen, fireEvent, waitFor } from "@testing-library/dom"
 import NewBillUI from "../views/NewBillUI.js"
 import NewBill from "../containers/NewBill.js"
-import {localStorageMock} from "../__mocks__/localStorage.js";
+import { localStorageMock } from "../__mocks__/localStorage.js";
 import mockedStore from "../__mocks__/store";
 import userEvent from '@testing-library/user-event';
 import { ROUTES, ROUTES_PATH } from "../constants/routes.js";
+import router from "../app/Router"
+import mockStore from "../__mocks__/store"
 
-// I tried using beforeEach() to get rid of the duplicate code in these two tests, but the tests then don't find the functions. I don't know if that's normal behavior or if I did something wrong :')
-// Also I don't really want to, and I'm technically over 80% coverage, but should I write tests that actually check the contents of handleSubmit()?
+jest.mock("../app/Store", () => mockStore)
 
-// beforeEach(() => {
-//   Object.defineProperty(window, 'localStorage', { value: localStorageMock })
-//   window.localStorage.setItem('user', JSON.stringify({
-//     type: 'Employee'
-//   }))
+// Init function for unit tests
+function newBillInit() {
+  Object.defineProperty(window, 'localStorage', { value: localStorageMock })
+  window.localStorage.setItem('user', JSON.stringify({
+    type: 'Employee'
+  }))
 
-//   const html = NewBillUI();
-//   document.body.innerHTML = html;
+  const html = NewBillUI();
+  document.body.innerHTML = html;
 
-//   const onNavigate = (pathname) => {
-//     document.body.innerHTML = ROUTES({ pathname })
-//   }
+  const onNavigate = (pathname) => {
+    document.body.innerHTML = ROUTES({ pathname })
+  }
 
-//   const newBillContainer = new NewBill({
-//     document, onNavigate, store: mockedStore, localStorage: window.localStorage
-//   })
+  const newBillContainer = new NewBill({
+    document, onNavigate, store: mockedStore, localStorage: window.localStorage
+  })
 
-//   const handleChangeFile = jest.fn(() => newBillContainer.handleChangeFile({
-//     target: {
-//       value: 'newbill.pdf',
-//     },
-//     preventDefault: () => {}
-//   }));
+  const handleSubmit = jest.fn(() => newBillContainer.handleSubmit({
+    target: {
+      querySelector: (element) => {
+        return { value: "" };
+      }
+    },
+    preventDefault: () => { }
+  }));
 
-//   const buttonFile = screen.getByTestId('file');
-//   buttonFile.addEventListener("change", handleChangeFile);
-//   fireEvent.change(buttonFile, {
-//     target: {
-//       files: [new File(['New Bill'], 'newbill.pdf', {type: 'application/pdf'})],
-//     },
-//   })
+  const buttonSubmit = screen.getByTestId('submit');
+  buttonSubmit.addEventListener("click", handleSubmit);
 
-//   const handleSubmit = jest.fn(() => newBillContainer.handleSubmit({
-//     target: {
-//       querySelector: () => {
-//       }
-//     },
-//     preventDefault: () => {}
-//   }));
+  const buttonFile = screen.getByTestId('file');
 
-//   const buttonSubmit = screen.getByTestId('submit');
-//   buttonSubmit.addEventListener("click", handleSubmit);
-//   userEvent.click(buttonSubmit);
-// })
+  return { 
+    newBillContainer: newBillContainer,
+    buttonSubmit: buttonSubmit, 
+    handleSubmit: handleSubmit,
+    buttonFile: buttonFile
+  }
+}
 
 // Unit tests
 describe("Given I am connected as an employee", () => {
@@ -64,113 +60,130 @@ describe("Given I am connected as an employee", () => {
     describe("When I select a new file", () => {
       describe("When the file type is correct", () => {
         test("Then the error message should be hidden and the submit button should be clickable", async () => {
-          Object.defineProperty(window, 'localStorage', { value: localStorageMock })
-          window.localStorage.setItem('user', JSON.stringify({
-            type: 'Employee'
-          }))
-
-          const html = NewBillUI();
-          document.body.innerHTML = html;
-
-          const onNavigate = (pathname) => {
-            document.body.innerHTML = ROUTES({ pathname })
-          }
-
-          const newBillContainer = new NewBill({
-            document, onNavigate, store: mockedStore, localStorage: window.localStorage
-          })
+          const { newBillContainer, buttonFile, buttonSubmit, handleSubmit } = newBillInit();
 
           const handleChangeFile = jest.fn(() => newBillContainer.handleChangeFile({
             target: {
               value: 'newbill.jpg',
             },
-            preventDefault: () => {}
+            preventDefault: () => { }
           }));
-
-          const buttonFile = screen.getByTestId('file');
+      
           buttonFile.addEventListener("change", handleChangeFile);
           fireEvent.change(buttonFile, {
             target: {
-              files: [new File(['New Bill'], 'newbill.jpg', {type: 'image/jpg'})],
+              files: [new File(['New Bill'], 'newbill.jpg', { type: 'image/jpg' })],
             },
           })
 
-          const handleSubmit = jest.fn(() => newBillContainer.handleSubmit({
-            target: {
-              querySelector: (element) => {
-                  return { value: "" };
-              }
-            },
-            preventDefault: () => {}
-          }));
-
-          const buttonSubmit = screen.getByTestId('submit');
-          buttonSubmit.addEventListener("click", handleSubmit);
           userEvent.click(buttonSubmit);
 
           expect(handleChangeFile).toHaveBeenCalled();
-
           expect(screen.queryByTestId('errorMessage')).toBeFalsy();
           expect(buttonSubmit.disabled).toBeFalsy();
-
           expect(handleSubmit).toHaveBeenCalled();
         })
       })
 
       describe("When the file type is incorrect", () => {
         test("Then an error message should be displayed and the submit button should be disabled", () => {
-          Object.defineProperty(window, 'localStorage', { value: localStorageMock })
-          window.localStorage.setItem('user', JSON.stringify({
-            type: 'Employee'
-          }))
-
-          const html = NewBillUI();
-          document.body.innerHTML = html;
-
-          const onNavigate = (pathname) => {
-            document.body.innerHTML = ROUTES({ pathname })
-          }
-
-          const newBillContainer = new NewBill({
-            document, onNavigate, store: mockedStore, localStorage: window.localStorage
-          })
+          const { newBillContainer, buttonFile, buttonSubmit, handleSubmit } = newBillInit();
 
           const handleChangeFile = jest.fn(() => newBillContainer.handleChangeFile({
             target: {
               value: 'newbill.pdf',
             },
-            preventDefault: () => {}
+            preventDefault: () => { }
           }));
 
-          const buttonFile = screen.getByTestId('file');
           buttonFile.addEventListener("change", handleChangeFile);
           fireEvent.change(buttonFile, {
             target: {
-              files: [new File(['New Bill'], 'newbill.pdf', {type: 'application/pdf'})],
+              files: [new File(['New Bill'], 'newbill.pdf', { type: 'application/pdf' })],
             },
           })
 
-          const handleSubmit = jest.fn(() => newBillContainer.handleSubmit({
-            target: {
-              querySelector: (element) => {
-                return { value: "" };
-            }
-            },
-            preventDefault: () => {}
-          }));
-
-          const buttonSubmit = screen.getByTestId('submit');
-          buttonSubmit.addEventListener("click", handleSubmit);
           userEvent.click(buttonSubmit);
+          const errorMessage = screen.getByTestId('errorMessage');
 
           expect(handleChangeFile).toHaveBeenCalled();
-
-          const errorMessage = screen.getByTestId('errorMessage');
           expect(errorMessage.getAttribute("class")).toContain("errorMessage--shown");
           expect(buttonSubmit.disabled).toBeTruthy();
-
           expect(handleSubmit).not.toHaveBeenCalled();
         })
+      })
+    })
+  })
+})
+
+// Integration tests
+describe("Given I am logged in as an employee", () => {
+  describe("When I submit the form in NewBill", () => {
+    test("The program posts the new bill in mock API", async () => {
+      localStorage.setItem("user", JSON.stringify({ type: "Employee" }));
+      const root = document.createElement("div")
+      root.setAttribute("id", "root")
+      document.body.append(root)
+      router()
+      window.onNavigate(ROUTES_PATH.NewBill)
+
+      const newBillContainer = new NewBill({
+        document, onNavigate, store: mockedStore, localStorage: window.localStorage
+      })
+
+      const updateBill = jest.fn(() => newBillContainer.updateBill());
+
+      updateBill();
+
+      await waitFor(() => screen.getByText("Mes notes de frais"))
+      const billType = screen.getAllByText("Hôtel et logement")
+      expect(billType).toBeTruthy()
+    })
+
+    describe("When an error occurs on the API", () => {
+      beforeEach(() => {
+        jest.spyOn(mockStore, "bills")
+        Object.defineProperty(
+          window,
+          'localStorage',
+          { value: localStorageMock }
+        )
+        window.localStorage.setItem('user', JSON.stringify({
+          type: 'Employee'
+        }))
+        const root = document.createElement("div")
+        root.setAttribute("id", "root")
+        document.body.appendChild(root)
+        router()
+      })
+
+      test("The program tries to fetch the bills from the API and fails with a 404 error", async () => {
+        mockStore.bills.mockImplementationOnce(() => {
+          return {
+            list: () => {
+              return Promise.reject(new Error("Erreur 404"))
+            }
+          }
+        })
+        window.onNavigate(ROUTES_PATH.Bills)
+        await new Promise(process.nextTick);
+        const message = await screen.getByText(/Erreur 404/)
+        expect(message).toBeTruthy()
+      })
+
+      test("The program tries to fetch the bills from the API and fails with a 500 error", async () => {
+        mockStore.bills.mockImplementationOnce(() => {
+          return {
+            list: () => {
+              return Promise.reject(new Error("Erreur 500"))
+            }
+          }
+        })
+
+        window.onNavigate(ROUTES_PATH.Bills)
+        await new Promise(process.nextTick);
+        const message = await screen.getByText(/Erreur 500/)
+        expect(message).toBeTruthy()
       })
     })
   })
