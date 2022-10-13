@@ -2,7 +2,7 @@
  * @jest-environment jsdom
  */
 
-import {getByTestId, getByText, screen, waitFor} from "@testing-library/dom"
+import { screen, waitFor } from "@testing-library/dom"
 import userEvent from '@testing-library/user-event'
 import "@testing-library/jest-dom";
 import BillsUI from "../views/BillsUI.js"
@@ -14,6 +14,33 @@ import mockStore from "../__mocks__/store"
 import router from "../app/Router.js";
 
 jest.mock("../app/Store", () => mockStore)
+
+function billsInit() {
+  const onNavigate = (pathname) => {
+    document.body.innerHTML = ROUTES({ pathname })
+  }
+
+  Object.defineProperty(window, 'localStorage', { value: localStorageMock })
+  window.localStorage.setItem('user', JSON.stringify({
+    type: 'Employee'
+  }))
+
+  document.body.innerHTML = BillsUI({ data: bills })
+
+  const billsContainer = new Bills({
+    document, onNavigate, store: null, bills:bills, localStorage: window.localStorage
+  })
+
+  const iconEye = screen.getAllByTestId('icon-eye')[0];
+  const handleClickIconEye = jest.fn(() => billsContainer.handleClickIconEye(iconEye));
+  iconEye.addEventListener("click", handleClickIconEye);
+
+  return { 
+    billsContainer: billsContainer,
+    iconEye: iconEye,
+    handleClickIconEye: handleClickIconEye
+  }
+}
 
 // Unit tests
 describe("Given I am logged in as an employee", () => {
@@ -35,7 +62,7 @@ describe("Given I am logged in as an employee", () => {
       expect(windowIcon).toHaveClass('active-icon')
     })
 
-    test("Then bills should be ordered from earliest to latest", () => {
+    test("Then bills should be ordered from latest to earliest", () => {
       document.body.innerHTML = BillsUI({ data: bills })
       const dates = screen.getAllByText(/^(19|20)\d\d[- /.](0[1-9]|1[012])[- /.](0[1-9]|[12][0-9]|3[01])$/i).map(a => a.innerHTML)
       const antiChrono = (a, b) => ((a < b) ? 1 : -1)
@@ -45,20 +72,7 @@ describe("Given I am logged in as an employee", () => {
 
     describe("When I click on new bill button", () => {
       test("Then I should navigate to New Bill view", () => {
-        const onNavigate = (pathname) => {
-          document.body.innerHTML = ROUTES({ pathname })
-        }
-  
-        Object.defineProperty(window, 'localStorage', { value: localStorageMock })
-        window.localStorage.setItem('user', JSON.stringify({
-          type: 'Employee'
-        }))
-  
-        document.body.innerHTML = BillsUI({ data: bills })
-
-        const billsContainer = new Bills({
-          document, onNavigate, store: null, bills:bills, localStorage: window.localStorage
-        })
+        const { billsContainer } = billsInit();
         
         const handleClickNewBill = jest.fn(() => billsContainer.handleClickNewBill());
         const buttonNewBill = screen.getByTestId('btn-new-bill');
@@ -72,24 +86,8 @@ describe("Given I am logged in as an employee", () => {
 
     describe("When I click on the eye icon", () => {
         test("Then the modal should open", () => {
-          const onNavigate = (pathname) => {
-            document.body.innerHTML = ROUTES({ pathname })
-          }
-    
-          Object.defineProperty(window, 'localStorage', { value: localStorageMock })
-          window.localStorage.setItem('user', JSON.stringify({
-            type: 'Employee'
-          }))
-    
-          document.body.innerHTML = BillsUI({ data: bills })
-  
-          const billsContainer = new Bills({
-            document, onNavigate, store: null, bills:bills, localStorage: window.localStorage
-          })
+          const { iconEye, handleClickIconEye } = billsInit();
           
-          const iconEye = screen.getAllByTestId('icon-eye')[0];
-          const handleClickIconEye = jest.fn(() => billsContainer.handleClickIconEye(iconEye));
-          iconEye.addEventListener("click", handleClickIconEye);
           $.fn.modal = jest.fn();
           userEvent.click(iconEye);
   
@@ -99,25 +97,9 @@ describe("Given I am logged in as an employee", () => {
 
       describe("When the file is valid", () => {
         test("Then the image should appear in the modal", () => {
-          const onNavigate = (pathname) => {
-            document.body.innerHTML = ROUTES({ pathname })
-          }
-    
-          Object.defineProperty(window, 'localStorage', { value: localStorageMock })
-          window.localStorage.setItem('user', JSON.stringify({
-            type: 'Employee'
-          }))
-    
-          document.body.innerHTML = BillsUI({ data: bills })
-  
-          const billsContainer = new Bills({
-            document, onNavigate, store: null, bills:bills, localStorage: window.localStorage
-          })
+          const { iconEye } = billsInit();
           
-          const iconEye = screen.getAllByTestId('icon-eye')[0];
           iconEye.setAttribute('data-bill-url', "http://localhost:5678/102e956511190da9d67ba21378683187");
-          const handleClickIconEye = jest.fn(() => billsContainer.handleClickIconEye(iconEye));
-          iconEye.addEventListener("click", handleClickIconEye);
           $.fn.modal = jest.fn();
           userEvent.click(iconEye);
           const billJustif = document.querySelector("img");
@@ -127,25 +109,9 @@ describe("Given I am logged in as an employee", () => {
 
       describe("When the file is corrupted", () => {
         test("Then text should appear instead of the image", () => {
-          const onNavigate = (pathname) => {
-            document.body.innerHTML = ROUTES({ pathname })
-          }
-    
-          Object.defineProperty(window, 'localStorage', { value: localStorageMock })
-          window.localStorage.setItem('user', JSON.stringify({
-            type: 'Employee'
-          }))
-    
-          document.body.innerHTML = BillsUI({ data: bills })
-  
-          const billsContainer = new Bills({
-            document, onNavigate, store: null, bills:bills, localStorage: window.localStorage
-          })
-          
-          const iconEye = screen.getAllByTestId('icon-eye')[0];
+          const { iconEye } = billsInit();
+
           iconEye.setAttribute('data-bill-url', "http://localhost:5678/null");
-          const handleClickIconEye = jest.fn(() => billsContainer.handleClickIconEye(iconEye));
-          iconEye.addEventListener("click", handleClickIconEye);
           $.fn.modal = jest.fn();
           userEvent.click(iconEye);
           expect(screen.getByText("Fichier corrompu")).toBeTruthy();
@@ -197,7 +163,7 @@ describe("Given I am logged in as an employee", () => {
         })
         window.onNavigate(ROUTES_PATH.Bills);
         await new Promise(process.nextTick);
-        const message = await screen.getByText(/Erreur 404/)
+        const message = screen.getByText(/Erreur 404/)
         expect(message).toBeTruthy()
       })
 
@@ -211,7 +177,7 @@ describe("Given I am logged in as an employee", () => {
 
         window.onNavigate(ROUTES_PATH.Bills)
         await new Promise(process.nextTick);
-        const message = await screen.getByText(/Erreur 500/)
+        const message = screen.getByText(/Erreur 500/)
         expect(message).toBeTruthy()
       })
     })

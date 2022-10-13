@@ -27,9 +27,9 @@ export default class NewBill {
 
     let extension = fileName.substr(fileName.lastIndexOf(".") + 1, fileName.length).toLowerCase();
     const validExtensions = ["png", "jpg", "jpeg"];
-    const errorMessage = document.getElementById('errorMessage');
     const btnSendBill = document.getElementById('btn-send-bill');
     const input = document.querySelector('form div.col-md-6:last-child div:last-child input');
+    const errorMessage = document.getElementById('errorMessage');
 
     if(validExtensions.includes(extension)) {
       errorMessage.setAttribute('class', 'errorMessage--hidden');
@@ -55,8 +55,7 @@ export default class NewBill {
     }
   }
   handleSubmit = e => {
-    e.preventDefault()
-    console.log('e.target.querySelector(`input[data-testid="datepicker"]`).value', e.target.querySelector(`input[data-testid="datepicker"]`).value)
+    e.preventDefault();
     const email = JSON.parse(localStorage.getItem("user")).email
     const bill = {
       email,

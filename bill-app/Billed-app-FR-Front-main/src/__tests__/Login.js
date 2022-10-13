@@ -137,8 +137,8 @@ describe("Given that I am a user on login page", () => {
     });
   });
 
-  describe("When I do fill fields in incorrect format and I click on admin button Login In", () => {
-    test("Then it should renders Login page", () => {
+  describe("When I fill fields in incorrect format and I click on admin login button", () => {
+    test("Then it should render Login page", () => {
       document.body.innerHTML = LoginUI();
 
       const inputEmailUser = screen.getByTestId("admin-email-input");

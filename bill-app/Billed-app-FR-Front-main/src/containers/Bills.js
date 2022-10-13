@@ -21,10 +21,8 @@ export default class {
   }
 
   handleClickIconEye = (icon) => {
-    const billUrl = icon.getAttribute("data-bill-url")
-    console.log(billUrl);
+    const billUrl = icon.getAttribute("data-bill-url");
     let end = billUrl.substr(billUrl.lastIndexOf("/") + 1, billUrl.length).toLowerCase();
-    console.log(end);
     if(end !== 'null') {
       const imgWidth = Math.floor($('#modaleFile').width() * 0.5)
       $('#modaleFile').find(".modal-body").html(`<div style='text-align: center;' class="bill-proof-container"><img width=${imgWidth} src=${billUrl} alt="Bill" /></div>`)
@@ -46,13 +44,10 @@ export default class {
             try {
               return {
                 ...doc,
-                date: doc.date,
+                date: formatDate(doc.date),
                 status: formatStatus(doc.status)
               }
             } catch(e) {
-              // if for some reason, corrupted data was introduced, we manage here failing formatDate function
-              // log the error and return unformatted date in that case
-              console.log(e,'for',doc)
               return {
                 ...doc,
                 date: doc.date,
@@ -60,7 +55,6 @@ export default class {
               }
             }
           })
-          console.log('length', bills.length)
         return bills
       })
     }

@@ -131,8 +131,6 @@ export default class {
   }
 
   handleShowTickets(e, bills, index) {
-    console.log(index);
-    console.log(this.index);
     if (this.counter === undefined || this.index !== index) {
       this.counter = 0
     }
@@ -152,7 +150,6 @@ export default class {
     }
 
     bills.forEach(bill => {
-      // bug hunt dashboard
       $(`#open-bill${bill.id}`).off('click').click((e) => this.handleEditTicket(e, bill, bills))
     })
 

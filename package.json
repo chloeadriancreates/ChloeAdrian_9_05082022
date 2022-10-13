@@ -4,8 +4,8 @@
   "description": "",
   "main": "./Billed-app-FR-Front-main/index.html",
   "scripts": {
-    "back": "cd Billed-app-FR-Back-main && npm run run:dev",
-    "front": "cd Billed-app-FR-Front-main && live-server"
+    "back": "cd bill-app/Billed-app-FR-Back-main && npm run run:dev",
+    "front": "cd bill-app/Billed-app-FR-Front-main && live-server"
   },
   "author": "",
   "license": "ISC"
